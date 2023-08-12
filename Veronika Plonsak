@@ -1,0 +1,16 @@
+def calculate_cats_with_hats(num_cats, num_rounds):
+    cats_with_hats = [False] * num_cats
+
+    for round_num in range(1, num_rounds + 1):
+        for cat_index in range(1, num_cats + 1):
+            if cat_index % round_num == 0:
+                cats_with_hats[cat_index - 1] = not cats_with_hats[cat_index - 1]
+
+    return [i + 1 for i, has_hat in enumerate(cats_with_hats) if has_hat]
+
+num_cats = 100
+num_rounds = 100
+hat_indices = calculate_cats_with_hats(num_cats, num_rounds)
+
+print("Cats with hats at the end:")
+print(hat_indices)
