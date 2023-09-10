@@ -1,1 +1,134 @@
+# This is a Bank class (lecture 14)__ below need to create Test for this code
 
+class Account:
+    def __init__(self, account_number, balance):
+        self.account_number = account_number
+        self.balance = balance
+    def deposit(self, amount):
+        if amount > 0:
+            self.balance += amount
+            print(f"Deposite ${amount} into Account {self.account_number}. New balance: ${self.balance}")
+    
+    def withdraw(self, amount):
+        if amount > 0 and amount <= self.balance:
+            self.balance -= amount
+            print(f"Withdrew ${amount} from Account {self.account_number}. New balance: ${self.balance}")
+        else: 
+            print(f"Insufficient funds in Account {self.account_number}. ")
+
+    def get_balance(self):
+        return self.balance
+
+
+class SavingsAccount(Account):
+    def __init__(self, account_number, balance, interest_rate):
+        super().__init__(account_number, balance)
+        self.interest_rate = interest_rate
+
+    def add_interest(self):
+         interest = self.balance * (self.interest_rate / 100)
+         self.balance += interest
+         print(f"Added interest of ${interest} to Savings Account {self.account_number}. New balance: ${self.balance}")               
+
+class CurrentAccount(Account):
+    def __init__(self, account_number, balance, overdraft_limit):
+        super().__init__(account_number, balance)
+        self.overdraft_limit = overdraft_limit
+
+    def withdraw(self, amount):
+        if amount > 0 and (self.balance + self.overdraft_limit) >= amount:
+            self.balance -= amount
+            print(f"Withdrew ${amount} from Current Account {self.account_number}. New balance: ${self.balance}")
+        else:
+            print(f"Insufficient funds or overdraft limit reached in Current Account {self.account_number}.")
+
+    def send_overdraft_letter(self):
+        print(f"Sent overdraft letter for Current Account {self.account_number}. Balance: ${self.balance}")
+
+
+class Bank:
+    def __init__(self):
+        self.accounts = []
+
+    def open_account(self, account):
+        self.accounts.append(account)
+        print(f"Opened a new account: Account {account.account_number}")
+
+    def close_account(self, account_number):
+        for account in self.accounts:
+            if account.account_number == account_number:
+                self.accounts.remove(account)
+                print(f"Closed Account {account_number}")
+                return
+        print(f"Account {account_number} not found.")
+
+    def pay_dividend(self, dividend_amount):
+        for account in self.accounts:
+            account.deposit(dividend_amount)
+
+    def update(self):
+        for account in self.accounts:
+            if isinstance(account, SavingsAccount):
+                account.add_interest()
+            elif isinstance(account, CurrentAccount) and account.get_balance() < 0:
+                account.send_overdraft_letter()
+
+
+savings_account = SavingsAccount(1, 1000, 2.5) 
+current_account = CurrentAccount(2, 500, -500) 
+
+bank = Bank()
+bank.open_account(savings_account)
+bank.open_account(current_account)
+
+bank.update()
+savings_account.deposit(200)
+current_account.withdraw(700)
+bank.pay_dividend(100)
+
+bank.close_account(1)
+
+
+
+
+
+# Lecture 18_ Test
+#Write a test for the Bank class that we wrote in 14 lesson. You should write a test for the open_account method. 
+# Ensure that the account is opened and has balance.
+# Test update method. It should check that code added interest and sent a message (print function was called).
+
+import unittest
+
+class TestBank(unittest.TestCase):
+    def test_open_account(self):
+        bank = Bank()
+        initial_balance = 1000
+        savings_account = SavingsAccount(1, initial_balance, 2.5)
+        bank.open_account(savings_account)
+        self.assertIn(savings_account, bank.accounts)
+
+    def test_update_method(self):
+        bank = Bank()
+        initial_balance = 1000
+        interest_rate = 2.5
+
+        savings_account = SavingsAccount(1, initial_balance, interest_rate)
+        bank.open_account(savings_account)
+
+        import builtins
+        captured_output = []
+        def mock_print(*args, **kwargs):
+            captured_output.append(args)
+        
+        real_print = builtins.print
+        builtins.print = mock_print
+
+        bank.update()
+
+        builtins.print = real_print
+
+        self.assertAlmostEqual(savings_account.get_balance(), initial_balance * (1 + interest_rate / 100), delta=0.01)
+        self.assertTrue(len(captured_output) > 0)
+
+if __name__ == '__main__':
+    unittest.main()
